@@ -87,28 +87,41 @@ async function executeType(element: HTMLElement, text: string): Promise<void> {
     const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
     
     if (valueSetter) {
-      // Use React's native value setter
+      // Clear the field first
       valueSetter.call(element, '');
-      
-      // Dispatch input event to clear
       element.dispatchEvent(new Event('input', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Set the final value and dispatch React-compatible events
-      valueSetter.call(element, text);
+      // Type character by character for realistic simulation
+      for (let i = 0; i <= text.length; i++) {
+        const currentText = text.substring(0, i);
+        valueSetter.call(element, currentText);
+        
+        // Dispatch input event for each character
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Add typing delay (varies between 50-120ms for realism)
+        const delay = 50 + Math.random() * 70;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
       
-      // Create and dispatch input event that React recognizes
-      const inputEvent = new Event('input', { bubbles: true });
-      element.dispatchEvent(inputEvent);
-      
-      // Also dispatch change event
-      const changeEvent = new Event('change', { bubbles: true });
-      element.dispatchEvent(changeEvent);
+      // Final change event after typing is complete
+      element.dispatchEvent(new Event('change', { bubbles: true }));
       
     } else {
-      // Fallback to direct value setting
-      element.value = text;
+      // Fallback: still do character-by-character typing
+      element.value = '';
       element.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      for (let i = 0; i <= text.length; i++) {
+        element.value = text.substring(0, i);
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        const delay = 50 + Math.random() * 70;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
       element.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
